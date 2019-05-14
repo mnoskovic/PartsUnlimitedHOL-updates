@@ -57,6 +57,6 @@ ForEach ($kvp in $webAppSettings) {
     $newWebAppSettings[$kvp.Name] = $kvp.Value
 }
  
-$newWebAppSettings["Function"] = $functionUrl
+$newWebAppSettings["FunctionUrl"] = $functionUrl
 
 Set-AzureRMWebApp -ResourceGroupName $ResourceGroupName -Name $WebAppName -AppSettings $newWebAppSettings 
