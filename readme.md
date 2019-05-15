@@ -147,6 +147,13 @@ write unit test - issue with netcore 1.0 ... supported from 2.0 !
 ```
 
 
+adjust nuget packages in unit test project
+
+> - install Microsoft.DotNet.InternalAbstractions
+> - update  Microsoft.Net.Test.Sdk   15.8.0
+
+
+
 # SELENIUM
 
 - run azure deploy from github
