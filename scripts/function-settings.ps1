@@ -1,10 +1,10 @@
 ﻿param
 (
     [Parameter(Mandatory=$true)]
-    $ResourceGroupName,
+    $ResourceGroupName = "devops-dev",
     
     [Parameter(Mandatory=$true)]
-    $WebAppName,
+    $WebAppName = "mnodevopsdev",
 
     [Parameter(Mandatory=$false)]
     $FunctionAppName = "$WebAppName-func",
@@ -12,6 +12,9 @@
     [Parameter(Mandatory=$false)]
     $FunctionName = "toggle"
 )
+
+#Login-AzureRmAccount -Subscription "c3ac1123-f7fb-449a-aa57-11bba25f92c6"
+
 
 $context = Get-AzureRmContext
 $subscriptionId = $context.Subscription.Id
@@ -24,8 +27,23 @@ $accountId = $context.Account.Id
 #$accountId
    
 $cache = $context.TokenCache
-$cacheItems= $cache.ReadItems()     
-$token =  ($cacheItems | where { $_.TenantId -eq $tenantId -and $_.DisplayableId -eq $accountId })[0]
+$cacheItems= $cache.ReadItems()
+$cacheItems    
+
+$token =  ($cacheItems | where { $_.TenantId -eq $tenantId -and $_.DisplayableId -eq $accountId }) | Select-Object -First 1
+
+if($token -eq $null)
+{
+    $token =  ($cacheItems | where { $_.TenantId -eq $tenantId }) | Select-Object -First 1
+
+}
+
+if($token -eq $null)
+{
+    Write-Error "no token"
+    Exit
+}
+
 #$token
 
 $accessToken = $token.AccessToken
@@ -42,8 +60,9 @@ $headers = @{
 
 $response = iwr -Method Post -Uri $uri -Headers $headers -UseBasicParsing
 $responseContent = ConvertFrom-Json $response.Content
+$responseContent
 $functionUrl = $responseContent.trigger_url
-#$functionUrl
+$functionUrl
 
 
 $webApp = Get-AzureRmWebApp -ResourceGroupName $ResourceGroupName -Name $WebAppName
