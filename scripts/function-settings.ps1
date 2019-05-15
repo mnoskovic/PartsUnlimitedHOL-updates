@@ -28,7 +28,7 @@ $accountId = $context.Account.Id
    
 $cache = $context.TokenCache
 $cacheItems= $cache.ReadItems()
-$cacheItems    
+#$cacheItems    
 
 $token =  ($cacheItems | where { $_.TenantId -eq $tenantId -and $_.DisplayableId -eq $accountId }) | Select-Object -First 1
 
