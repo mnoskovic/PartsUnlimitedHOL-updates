@@ -1,69 +1,72 @@
 {
-  "$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
-  "contentVersion": "1.0.0.0",
-  "parameters": {
-    "WebsiteName": {
-      "type": "string"
-    },
-    "PartsUnlimitedServerName": {
-      "type": "string"
-    },
-    "PartsUnlimitedServerAdminLogin": {
-      "type": "string",
-      "defaultValue": "AdminUser"
-    },
-    "PartsUnlimitedServerAdminLoginPassword": {
-      "type": "securestring"
-    },
-    "PartsUnlimitedDBName": {
-      "type": "string",
-      "defaultValue": "PartsUnlimitedDB"
-    },
-    "PartsUnlimitedDBCollation": {
-      "type": "string",
-      "defaultValue": "SQL_Latin1_General_CP1_CI_AS"
-    },
-    "PartsUnlimitedDBEdition": {
-      "type": "string",
-      "defaultValue": "Basic",
-      "allowedValues": [
-        "Basic",
-        "Business",
-        "Premium",
-        "Standard",
-        "Web"
-      ]
-    },
-    "PartsUnlimitedHostingPlanName": {
-      "type": "string"
-    },
-    "PartsUnlimitedHostingPlanSKU": {
-      "type": "string",
-      "allowedValues": [
-        "Standard"
-      ],
-      "defaultValue": "Standard"
-    },
-    "PartsUnlimitedHostingPlanWorkerSize": {
-      "type": "string",
-      "allowedValues": [
-        "0",
-        "1",
-        "2"
-      ],
-      "defaultValue": "0"
-    },
-    "EnableRules": {
-      "type": "bool",
-      "defaultValue": false
-    }
-  },
+	"$schema": "http://schema.management.azure.com/schemas/2015-01-01/deploymentTemplate.json#",
+	"contentVersion": "1.0.0.0",
+	"parameters": {
+		"WebsiteName": {
+			"type": "string"
+		},
+		"PartsUnlimitedServerName": {
+			"type": "string"
+		},
+		"PartsUnlimitedServerAdminLogin": {
+			"type": "string",
+			"defaultValue": "AdminUser"
+		},
+		"PartsUnlimitedServerAdminLoginPassword": {
+			"type": "securestring"
+		},
+		"PartsUnlimitedDBName": {
+			"type": "string",
+			"defaultValue": "PartsUnlimitedDB"
+		},
+		"PartsUnlimitedDBCollation": {
+			"type": "string",
+			"defaultValue": "SQL_Latin1_General_CP1_CI_AS"
+		},
+		"PartsUnlimitedDBEdition": {
+			"type": "string",
+			"defaultValue": "Basic",
+			"allowedValues": [
+				"Basic",
+				"Business",
+				"Premium",
+				"Standard",
+				"Web"
+			]
+		},
+		"PartsUnlimitedHostingPlanName": {
+			"type": "string"
+		},
+		"PartsUnlimitedHostingPlanSKU": {
+			"type": "string",
+			"allowedValues": [
+				"Standard"
+			],
+			"defaultValue": "Standard"
+		},
+		"PartsUnlimitedHostingPlanWorkerSize": {
+			"type": "string",
+			"allowedValues": [
+				"0",
+				"1",
+				"2"
+			],
+			"defaultValue": "0"
+		},
+		"EnableRules": {
+			"type": "bool",
+			"defaultValue": false
+		}
+	},
   "variables": {
     "storageApiVersion": "2015-06-15",
 
-    "PartsUnlimitedServerName": "[toLower(parameters('PartsUnlimitedServerName'))]",
     "PartsUnlimitedAPI": "[toLower(concat(parameters('PartsUnlimitedServerName'),'-api'))]",
-    "PartsUnlimitedFunction": "[toLower(concat(parameters('PartsUnlimitedServerName'),'-func'))]"
+    "PartsUnlimitedFunction": "[toLower(concat(parameters('PartsUnlimitedServerName'),'-func'))]",
+
+    "PartsUnlimitedStorage": "[toLower(concat(parameters('PartsUnlimitedServerName')))]",
+    "PartsUnlimitedServerName": "[toLower(parameters('PartsUnlimitedServerName'))]",
+    "PartsUnlimitedServerNameStage": "[toLower(concat(parameters('PartsUnlimitedServerName'),'-stage'))]"
 
   },
   "resources": [
@@ -113,9 +116,55 @@
         }
       ]
     },
+    //sql server - stage
+    {
+      "name": "[variables('PartsUnlimitedServerNameStage')]",
+      "type": "Microsoft.Sql/servers",
+      "location": "[resourceGroup().location]",
+      "apiVersion": "2014-04-01-preview",
+      "tags": {
+        "displayName": "PartsUnlimitedServer"
+      },
+      "properties": {
+        "administratorLogin": "[parameters('PartsUnlimitedServerAdminLogin')]",
+        "administratorLoginPassword": "[parameters('PartsUnlimitedServerAdminLoginPassword')]"
+      },
+      "resources": [
+        {
+          "name": "[concat('AllowAllIps', variables('PartsUnlimitedServerName'))]",
+          "type": "firewallrules",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('PartsUnlimitedServerNameStage'))]"
+          ],
+          "properties": {
+            "startIpAddress": "0.0.0.0",
+            "endIpAddress": "0.0.0.0"
+          }
+        },
+        {
+          "name": "[parameters('PartsUnlimitedDBName')]",
+          "type": "databases",
+          "location": "[resourceGroup().location]",
+          "apiVersion": "2014-04-01-preview",
+          "dependsOn": [
+            "[resourceId('Microsoft.Sql/servers', variables('PartsUnlimitedServerNameStage'))]"
+          ],
+          "tags": {
+            "displayName": "PartsUnlimitedDB"
+          },
+          "properties": {
+            "collation": "[parameters('PartsUnlimitedDBCollation')]",
+            "edition": "[parameters('PartsUnlimitedDBEdition')]",
+            "maxSizeBytes": "1073741824"
+          }
+        }
+      ]
+    },
     //app insights
     {
-      "name": "[concat(parameters('WebsiteName'), '-Insights')]",
+      "name": "[variables('PartsUnlimitedServerName')]",
       "type": "Microsoft.Insights/components",
       "location": "East US",
       "apiVersion": "2014-04-01",
@@ -123,7 +172,20 @@
         "displayName": "insightsComponents"
       },
       "properties": {
-        "ApplicationId": "[concat(parameters('WebsiteName'), '-Insights')]"
+        "ApplicationId": "[concat(parameters('WebsiteName'))]"
+      }
+    },
+    //app insights - stage
+    {
+      "name": "[variables('PartsUnlimitedServerNameStage')]",
+      "type": "Microsoft.Insights/components",
+      "location": "East US",
+      "apiVersion": "2014-04-01",
+      "tags": {
+        "displayName": "insightsComponents"
+      },
+      "properties": {
+        "ApplicationId": "[concat(parameters('WebsiteName'))]"
       }
     },
 
@@ -282,7 +344,6 @@
       }
     },
 
-
     //api
     {
       "name": "[variables('PartsUnlimitedAPI')]",
@@ -290,7 +351,7 @@
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', parameters('PartsUnlimitedHostingPlanName'))]",
         "[resourceId('Microsoft.Sql/servers', variables('PartsUnlimitedServerName'))]",
-        "[resourceId('Microsoft.Insights/components', concat(parameters('WebsiteName'), '-Insights'))]"
+        "[resourceId('Microsoft.Insights/components', variables('PartsUnlimitedServerName'))]"
       ],
       "location": "[resourceGroup().location]",
       "apiVersion": "2014-06-01",
@@ -311,18 +372,17 @@
             "[resourceId('Microsoft.Web/sites', variables('PartsUnlimitedAPI'))]"
           ],
           "properties": {
-            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'), '-Insights')).InstrumentationKey]",
-            "Keys:ApplicationInsights:InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'), '-Insights')).InstrumentationKey]"
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'))).InstrumentationKey]",
+            "Keys:ApplicationInsights:InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'))).InstrumentationKey]"
           }
         }
       ]
     },
 
-
     //storage account for function
     {
 
-      "name": "[variables('PartsUnlimitedFunction')]",
+      "name": "[variables('PartsUnlimitedStorage')]",
       "type": "Microsoft.Storage/storageAccounts",
       "kind": "Storage",
       "apiVersion": "2017-10-01",
@@ -354,9 +414,9 @@
       "tags": {
         "displayName": "functionAppPlan"
       },
-      "properties": {
-        "name": "[variables('PartsUnlimitedFunction')]"
-      },
+      //"properties": {
+      //	"name": "[variables('PartsUnlimitedFunction')]"
+      //},
       "dependsOn": []
     },
     //function
@@ -371,7 +431,7 @@
         "displayName": "PartsUnlimited.Function"
       },
       "properties": {
-        "name": "[variables('PartsUnlimitedFunction')]",
+        //"name": "[variables('PartsUnlimitedFunction')]",
         "serverFarmId": "[resourceId('Microsoft.Web/serverfarms', variables('PartsUnlimitedFunction'))]"
       },
       "resources": [
@@ -380,7 +440,7 @@
           "type": "config",
           "apiVersion": "2016-08-01",
           "dependsOn": [
-            "[concat('Microsoft.Web/sites/', variables('PartsUnlimitedFunction'))]"
+            "[resourceId('Microsoft.Web/sites/', variables('PartsUnlimitedFunction'))]"
           ],
           "properties": {
             "phpVersion": "Off",
@@ -393,25 +453,24 @@
           "type": "config",
           "apiVersion": "2016-08-01",
           "dependsOn": [
-            "[resourceId('Microsoft.Storage/storageAccounts/', variables('PartsUnlimitedFunction'))]",
-            "[concat('Microsoft.Web/sites/', variables('PartsUnlimitedFunction'))]"
+            "[resourceId('Microsoft.Storage/storageAccounts/', variables('PartsUnlimitedStorage'))]",
+            "[resourceId('Microsoft.Web/sites/', variables('PartsUnlimitedFunction'))]"
           ],
           "properties": {
 
-            "ApplicationInsights.InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'), '-Insights')).InstrumentationKey]",
-            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'), '-Insights')).InstrumentationKey]",
+            "ApplicationInsights.InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'))).InstrumentationKey]",
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'))).InstrumentationKey]",
 
-            "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('PartsUnlimitedFunction'), ';AccountKey=', concat(listKeys(variables('PartsUnlimitedFunction'), variables('storageApiVersion')).key1))]",
-            "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('PartsUnlimitedFunction'), ';AccountKey=', concat(listKeys(variables('PartsUnlimitedFunction'), variables('storageApiVersion')).key1))]",
+            "AzureWebJobsStorage": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('PartsUnlimitedStorage'), ';AccountKey=', concat(listKeys(resourceId('Microsoft.Storage/storageAccounts/', variables('PartsUnlimitedStorage')), variables('storageApiVersion')).key1))]",
+            "AzureWebJobsDashboard": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('PartsUnlimitedStorage'), ';AccountKey=', concat(listKeys(resourceId('Microsoft.Storage/storageAccounts/', variables('PartsUnlimitedStorage')), variables('storageApiVersion')).key1))]",
             "AzureWebJobsSecretStorageType": "files",
-            
-            "ApiUrl": "[concat('https://', variables['PartsUnlimitedAPI'], '.azurewebsites.net')]",
+
+            "ApiUrl": "[concat('https://', variables('PartsUnlimitedAPI'), '.azurewebsites.net')]",
 
             "FUNCTIONS_EXTENSION_VERSION": "~1",
             "MSDEPLOY_RENAME_LOCKED_FILES": "1"
           }
         },
-
         {
           "name": "connectionstrings",
           "type": "config",
@@ -421,11 +480,11 @@
           ],
           "properties": {
             "AzureWebJobsStorage": {
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('PartsUnlimitedFunction'), ';AccountKey=', concat(listKeys(variables('PartsUnlimitedFunction'), variables('storageApiVersion')).key1))]",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('PartsUnlimitedStorage'), ';AccountKey=', concat(listKeys(resourceId('Microsoft.Storage/storageAccounts/', variables('PartsUnlimitedStorage')), variables('storageApiVersion')).key1))]",
               "type": "Custom"
             },
             "AzureWebJobsDashboard": {
-              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('PartsUnlimitedFunction'), ';AccountKey=', concat(listKeys(variables('PartsUnlimitedFunction'), variables('storageApiVersion')).key1))]",
+              "value": "[concat('DefaultEndpointsProtocol=https;AccountName=', variables('PartsUnlimitedStorage'), ';AccountKey=', concat(listKeys(resourceId('Microsoft.Storage/storageAccounts/', variables('PartsUnlimitedStorage')), variables('storageApiVersion')).key1))]",
               "type": "Custom"
             }
           }
@@ -434,11 +493,10 @@
       ],
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', variables('PartsUnlimitedFunction'))]",
-        "[resourceId('Microsoft.Insights/components', concat(parameters('WebsiteName'), '-Insights'))]",
+        "[resourceId('Microsoft.Insights/components', concat(parameters('WebsiteName')))]",
         "[resourceId('Microsoft.Web/sites', variables('PartsUnlimitedAPI'))]"
       ]
     },
-
 
     //web site
     {
@@ -447,7 +505,8 @@
       "dependsOn": [
         "[resourceId('Microsoft.Web/serverfarms', parameters('PartsUnlimitedHostingPlanName'))]",
         "[resourceId('Microsoft.Sql/servers', variables('PartsUnlimitedServerName'))]",
-        "[resourceId('Microsoft.Insights/components', concat(parameters('WebsiteName'), '-Insights'))]",
+        "[resourceId('Microsoft.Insights/components', variables('PartsUnlimitedServerName'))]",
+        "[resourceId('Microsoft.Insights/components', variables('PartsUnlimitedServerNameStage'))]",
         "[resourceId('Microsoft.Web/sites', variables('PartsUnlimitedFunction'))]"
 
       ],
@@ -484,11 +543,29 @@
             "[resourceId('Microsoft.Web/sites', parameters('WebSiteName'))]"
           ],
           "properties": {
-            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'), '-Insights')).InstrumentationKey]",
-            "ApplicationInsights.InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'), '-Insights')).InstrumentationKey]",
-            "Keys:ApplicationInsights:InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'), '-Insights')).InstrumentationKey]",
+            "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'))).InstrumentationKey]",
+            "ApplicationInsights.InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'))).InstrumentationKey]",
+            "Keys:ApplicationInsights:InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', parameters('WebsiteName'))).InstrumentationKey]"
           }
         },
+        {
+          "name": "slotconfignames",
+          "type": "config",
+          "apiVersion": "2014-11-01",
+          "dependsOn": [
+            "[resourceId('Microsoft.Web/sites', parameters('WebSiteName'))]"
+          ],
+          "properties": {
+            "connectionStringNames": [
+              "DefaultConnectionString"
+            ],
+            "appSettingNames": [
+              "APPINSIGHTS_INSTRUMENTATIONKEY",
+              "Keys:ApplicationInsights:InstrumentationKey"
+            ]
+          }
+        },
+
         {
           "name": "Staging",
           "type": "slots",
@@ -497,12 +574,39 @@
           "dependsOn": [
             "[resourceId('Microsoft.Web/sites', parameters('WebSiteName'))]"
           ],
-          "properties": {}
+          "properties": {
+          },
+          "resources": [
+            {
+              "name": "connectionstrings",
+              "type": "config",
+              "apiVersion": "2016-08-01",
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('WebSiteName'), 'Staging')]"
+              ],
+              "properties": {
+                "DefaultConnectionString": {
+                  "value": "[concat('Data Source=tcp:', reference(concat('Microsoft.Sql/servers/', variables('PartsUnlimitedServerNameStage'))).fullyQualifiedDomainName, ',1433;Initial Catalog=', parameters('PartsUnlimitedDBName'), ';User Id=', parameters ('PartsUnlimitedServerAdminLogin'), '@', variables('PartsUnlimitedServerNameStage'), ';Password=', parameters('PartsUnlimitedServerAdminLoginPassword'), ';')]",
+                  "type": "SQLAzure"
+                }
+              }
+            },
+            {
+              "name": "appsettings",
+              "type": "config",
+              "apiVersion": "2016-08-01",
+              "dependsOn": [
+                "[resourceId('Microsoft.Web/sites/slots', parameters('WebSiteName'), 'Staging')]"
+              ],
+              "properties": {
+                "APPINSIGHTS_INSTRUMENTATIONKEY": "[reference(concat('Microsoft.Insights/components/', variables('PartsUnlimitedServerNameStage'))).InstrumentationKey]",
+                "Keys:ApplicationInsights:InstrumentationKey": "[reference(concat('Microsoft.Insights/components/', variables('PartsUnlimitedServerNameStage'))).InstrumentationKey]"
+              }
+            }
+          ]
         }
       ]
     },
-
-
     {
       "name": "[concat('ServerErrors ', parameters('WebsiteName'))]",
       "type": "Microsoft.Insights/alertrules",

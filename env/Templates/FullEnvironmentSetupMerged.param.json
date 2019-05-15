@@ -3,37 +3,16 @@
     "contentVersion": "1.0.0.0",
     "parameters": {
         "WebsiteName": {
-            "value": ""
+            "value": "mnodevopsdev"
         },
         "PartsUnlimitedServerName": {
-            "value": ""
+            "value": "mnodevopsdev"
         },
         "PartsUnlimitedHostingPlanName": {
-            "value": ""
+            "value": "mnodevopsdev"
         },
-        "CdnStorageAccountName": {
-            "value": ""
-        },
-        "CdnStorageContainerName": {
-            "value": ""
-        },
-        "CdnStorageAccountNameForDev": {
-            "value": ""
-        },
-        "CdnStorageContainerNameForDev": {
-            "value": ""
-        },
-        "CdnStorageAccountNameForStaging": {
-            "value": ""
-        },
-        "CdnStorageContainerNameForStaging": {
-            "value": ""
-        },
-        "PartsUnlimitedServerAdminLoginPassword": {
-            "value": ""
-        },
-        "PartsUnlimitedServerAdminLoginPasswordForTest": {
-            "value": ""
-        }
+      "PartsUnlimitedServerAdminLogin": {
+        "value": "AdminUser"
+      }
     }
 }
