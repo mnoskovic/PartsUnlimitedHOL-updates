@@ -35,7 +35,11 @@ $token =  ($cacheItems | where { $_.TenantId -eq $tenantId -and $_.DisplayableId
 if($token -eq $null)
 {
     $token =  ($cacheItems | where { $_.TenantId -eq $tenantId }) | Select-Object -First 1
+}
 
+if($token -eq $null)
+{
+    $token =  $cacheItems | Select-Object -First 1
 }
 
 if($token -eq $null)
