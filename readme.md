@@ -139,6 +139,13 @@ write unit test - issue with netcore 1.0 ... supported from 2.0 !
 ```
 
 
+- adjust dotnet core test action 
+> turn of checkbox for generating code coverage and replace with custom parameters
+
+```
+--logger trx;LogFileName=Test-Output.xml --results-directory $(Common.TestResultsDirectory) --collect "Code coverage"
+```
+
 
 # SELENIUM
 
