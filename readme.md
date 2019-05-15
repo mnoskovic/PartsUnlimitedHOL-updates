@@ -85,6 +85,7 @@ adjust release definition
 
 
 
+
 # UNIT TESTING
 
 adjust unit testing project (include ```<IsTestProject>``` tag)
@@ -127,6 +128,16 @@ write unit test - issue with netcore 1.0 ... supported from 2.0 !
 - create token and copy to clipboard
 - create ednpoint in azure devops
 - adjust build to use sonarqube
+
+
+- adjust the build csproj (sample:)
+
+```xml
+    <DebugType>Full</DebugType> 
+    <ProjectGuid>{59F65B6D-6476-4517-A5A6-7FA64E13C0CA}</ProjectGuid>
+
+```
+
 
 
 # SELENIUM
