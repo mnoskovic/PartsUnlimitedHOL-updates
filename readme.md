@@ -156,10 +156,24 @@ adjust nuget packages in unit test project
 
 # SELENIUM
 
-- run azure deploy from github
-- create new repo and import tests
-- build solution and provide outcomes in output (for javascript part publish javascripts, json, feature files as artifacts)
+- run azure deploy from github  https://github.com/mnoskovic/selenium
+- create new repo "selenium" and import tests
+- build solution on the repository by creating CI pipeline and provide outcomes in output (only binaries))
+Build Definition: https://github.com/mnoskovic/Selenium/blob/master/selenium-tests-ci.json
 
-- on release process download artifacts
-- for javascript based tests install dependencies (npm install) 
-- run tests (c# based, js based)
+
+Create two release processes
+- one for c#
+- other one for javascript
+
+C# release process
+- link artifacts from build output
+- add "replace tokens" task to provide variables for the urls (configure 
+- add test execution (vstest console) and test results publishing
+Release definition: https://github.com/mnoskovic/Selenium/blob/master/tests-cs.json
+
+Javascript release process
+- link artifacts from source (not the build), there are options to zip and unzip... to make it faster
+- install dependencies (npm install) 
+- run tests (npm run test)
+Release definition: https://github.com/mnoskovic/Selenium/blob/master/tests-js.json
